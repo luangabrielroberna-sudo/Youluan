@@ -1,0 +1,336 @@
+{
+  "image": "mcr.microsoft.com/devcontainers/universal:2",
+  "features": {}
+}<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SeuCat — Catálogo Estilo YouCine</title>
+  <meta name="description" content="Catálogo de serviços, vídeos e produtos — estilo streaming, fácil de usar, foco em vendas orgânicas e agendamento." />
+  <!-- Favicone (substitua pela sua) -->
+  <link rel="icon" href="data:;base64,=">
+  <style>
+    /* ---------- Reset & tipografia ---------- */
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#f97316; --glass: rgba(255,255,255,0.04);
+      --maxw:1200px;
+      --radius:12px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,#071026 0%, #081428 60%); color:#e6eef6;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      padding:28px 18px; display:flex; justify-content:center;
+    }
+    .wrap{width:100%; max-width:var(--maxw)}
+    header{display:flex;align-items:center;gap:18px;margin-bottom:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{
+      width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#ffb86b);
+      display:flex;align-items:center;justify-content:center;font-weight:700;color:#081428
+    }
+    h1{font-size:20px;margin:0}
+    p.lead{margin:0;color:var(--muted);font-size:13px}
+    /* ---------- Controls ---------- */
+    .controls{display:flex;gap:10px;align-items:center;margin:18px 0;flex-wrap:wrap}
+    .search{flex:1;min-width:220px}
+    input.search, select.cat{
+      width:100%; padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);
+      background:var(--card); color:inherit; outline:none;
+    }
+    .btn{padding:10px 14px;border-radius:10px;background:linear-gradient(90deg,var(--accent),#ffb86b);border:none;color:#081428;font-weight:600;cursor:pointer}
+    .ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px 12px;border-radius:10px;color:var(--muted)}
+    /* ---------- Grid ---------- */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);padding:10px;border-radius:12px;backdrop-filter: blur(6px);border:1px solid var(--glass)}
+    .thumb{width:100%;height:120px;border-radius:10px;background-size:cover;background-position:center;margin-bottom:10px}
+    .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+    .tag{font-size:12px;padding:6px 8px;border-radius:999px;background:rgba(255,255,255,0.03);color:var(--muted)}
+    .title{font-weight:700;margin:0 0 6px 0}
+    .meta{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .actions{display:flex;gap:8px;align-items:center}
+    .small{padding:8px 10px;font-size:13px;border-radius:10px}
+    /* ---------- Modal ---------- */
+    .modal-back{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:none;align-items:center;justify-content:center;padding:18px;z-index:60}
+    .modal{width:100%;max-width:820px;background:#071428;border-radius:14px;padding:20px;border:1px solid rgba(255,255,255,0.04)}
+    .modal .row{display:flex;gap:14px;align-items:flex-start}
+    .modal .left{flex:1}
+    .modal .right{width:300px}
+    .close{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px}
+    /* ---------- Blog & footer ---------- */
+    .blog{margin-top:22px;display:grid;grid-template-columns:1fr 280px;gap:14px}
+    .post{background:var(--card);padding:12px;border-radius:10px;border:1px solid var(--glass)}
+    footer{margin-top:26px;color:var(--muted);font-size:13px;text-align:center}
+    /* ---------- Responsiveness ---------- */
+    @media (max-width:880px){ .modal .row{flex-direction:column} .blog{grid-template-columns:1fr} .right{width:100%} .logo{width:48px;height:48px} }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="app">
+    <header>
+      <div class="brand">
+        <div class="logo">SC</div>
+        <div>
+          <h1>SeuCat — Catálogo Estilo YouCine</h1>
+          <p class="lead">Catálogo profissional para vender serviços, agendar clientes e mostrar portfólio.</p>
+        </div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <button class="ghost" id="open-agenda">Agendar</button>
+        <a class="btn" id="contact-whatsapp" href="#" target="_blank">WhatsApp</a>
+      </div>
+    </header>
+
+    <!-- Controls -->
+    <div class="controls" aria-hidden="false">
+      <div style="flex:1" class="search">
+        <input id="searchInput" class="search" placeholder="Pesquisar cortes, serviços, vídeos..." />
+      </div>
+      <div style="width:220px">
+        <select id="categorySelect" class="cat">
+          <option value="">Todas as categorias</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn" id="clearFilters">Limpar</button>
+      </div>
+    </div>
+
+    <!-- Grid de conteúdos -->
+    <section>
+      <div class="grid" id="grid">
+        <!-- cards gerados pelo JS -->
+      </div>
+    </section>
+
+    <!-- Blog & dicas rápidas -->
+    <section class="blog">
+      <div>
+        <h3 style="margin:12px 0 8px 0">Últimos posts</h3>
+        <div id="posts">
+          <!-- posts -->
+        </div>
+      </div>
+      <aside class="right">
+        <div class="post">
+          <h4 style="margin:0 0 8px 0">Dica Rápida</h4>
+          <p style="margin:0;color:var(--muted)">Use o botão WhatsApp em cada serviço com uma mensagem pronta para vender orgânico: "Oi! Vi seu serviço de <b>{serviço}</b>. Tem disponibilidade esta semana?"</p>
+        </div>
+        <div style="height:12px"></div>
+        <div class="post">
+          <h4 style="margin:0 0 8px 0">Financeiro</h4>
+          <p style="margin:0;color:var(--muted)">Fatura meta: defina 1 valor alvo mensal e divida por 4 semanas. Passe a cobrar por pacotes — facilita controle.</p>
+        </div>
+      </aside>
+    </section>
+
+    <footer>
+      Feito com pressa e carinho • Atualize as imagens e textos no arquivo HTML • © <span id="year"></span>
+    </footer>
+  </div>
+
+  <!-- Modal (detalhes do conteúdo) -->
+  <div class="modal-back" id="modalBack">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong id="modalTitle">Detalhes</strong>
+        <button class="close" id="closeModal">✕</button>
+      </div>
+      <div class="row">
+        <div class="left">
+          <div id="modalThumb" style="width:100%;height:300px;border-radius:10px;background-size:cover;background-position:center;margin-bottom:12px"></div>
+          <p id="modalDesc" style="color:var(--muted)"></p>
+        </div>
+        <div class="right">
+          <div style="background:rgba(255,255,255,0.02);padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)">
+            <p style="margin:0 0 8px 0;font-weight:700" id="modalName">Nome</p>
+            <p style="margin:0 0 12px 0;color:var(--muted)" id="modalCategory">Categoria</p>
+            <p style="margin:0 0 12px 0;color:var(--muted)"><b>Valor:</b> <span id="modalPrice">R$ 0,00</span></p>
+
+            <button class="btn small" id="whatsappBuy">Pedir por WhatsApp</button>
+            <div style="height:8px"></div>
+            <button class="ghost small" id="openSchedule">Agendar horário</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Templates de dados: substitua por seus itens -->
+  <script>
+    /* ===========================
+       DADOS FÁCEIS DE EDITAR
+       Edite esse array para alterar o catálogo.
+       Cada item: id, title, category, desc, price (string), img (url)
+       =========================== */
+    const DATA = [
+      {id:1, title:"Corte Moderno + Finalização", category:"Cortes", desc:"Corte personalizado + finalização com escova rápida. Ideal pra quem quer praticidade e estilo.", price:"R$ 80,00", img:"https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=1"},
+      {id:2, title:"Selagem + Hidratação", category:"Tratamentos", desc:"Selagem térmica com tratamento regenerador. Resultado liso, brilho e maciez.", price:"R$ 180,00", img:"https://images.unsplash.com/photo-1556228720-3a2a1f5e5b3d?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=2"},
+      {id:3, title:"Transformação (Antes/Depois)", category:"Transformações", desc:"Serviço completo de corte, coloração e finalização. Consulte preço por complexo do serviço.", price:"Sob consulta", img:"https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=3"},
+      {id:4, title:"Mini Aula: Como cuidar do seu cabelo", category:"Vídeos", desc:"Vídeo curto ensinando rotina semanal para cabelos tratados em casa.", price:"Grátis", img:"https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=4"},
+      {id:5, title:"Escova + Modelagem", category:"Finalizações", desc:"Escova com modelagem e finalização para eventos.", price:"R$ 60,00", img:"https://images.unsplash.com/photo-1545996124-1b3b1e69f3b9?q=80&w=1200&auto=format&fit=crop&ixlib=rb-4.0.3&s=5"}
+    ];
+
+    /* POSTS do blog (simples) */
+    const POSTS = [
+      {id:1, title:"Como vender no Instagram sem investir", excerpt:"Tática prática pra atrair clientes direto pelo Direct e WhatsApp: 3 mensagens que convertem."},
+      {id:2, title:"Organize suas finanças em 4 passos", excerpt:"Planilha simples, metas semanais e rotina de checagem — consiga pagar contas e investir no salão."}
+    ];
+
+    /* CONFIG */
+    const PHONE_WHATS = "5511999999999"; // <-- Troque para seu número com DDI (ex: 55 + DDD + número). Não inclua +.
+    const SITE_NAME = "SeuCat";
+    document.getElementById('year').innerText = new Date().getFullYear();
+
+    /* ---------- Inicialização UI ---------- */
+    const grid = document.getElementById('grid');
+    const postsEl = document.getElementById('posts');
+    const categorySelect = document.getElementById('categorySelect');
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearFilters');
+    const contactWhatsapp = document.getElementById('contact-whatsapp');
+    const modalBack = document.getElementById('modalBack');
+    const modalThumb = document.getElementById('modalThumb');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalName = document.getElementById('modalName');
+    const modalCategory = document.getElementById('modalCategory');
+    const modalPrice = document.getElementById('modalPrice');
+    const whatsappBuy = document.getElementById('whatsappBuy');
+    const openSchedule = document.getElementById('openSchedule');
+    const openAgenda = document.getElementById('open-agenda');
+
+    // Prepara categorias
+    const categories = Array.from(new Set(DATA.map(i => i.category)));
+    categories.forEach(cat => {
+      const o = document.createElement('option'); o.value = cat; o.textContent = cat; categorySelect.appendChild(o);
+    });
+
+    // Monta grid inicial
+    function renderGrid(items){
+      grid.innerHTML = "";
+      if(items.length === 0){
+        grid.innerHTML = '<div style="grid-column:1/-1;color:var(--muted);padding:20px;background:var(--card);border-radius:10px;border:1px solid var(--glass)">Nenhum item encontrado.</div>';
+        return;
+      }
+      items.forEach(item => {
+        const card = document.createElement('div'); card.className="card";
+        card.innerHTML = `
+          <div class="thumb" style="background-image:url('${item.img}')"></div>
+          <div class="tags"><div class="tag">${item.category}</div></div>
+          <p class="title">${item.title}</p>
+          <p class="meta">${item.desc.substring(0,90)}${item.desc.length>90?'...':''}</p>
+          <div class="actions">
+            <button class="ghost small" data-id="${item.id}">Ver</button>
+            <button class="btn small" data-buy="${item.id}">Pedir - ${item.price}</button>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+      // liga eventos
+      document.querySelectorAll('button[data-id]').forEach(b => b.onclick = () => openModal(b.dataset.id));
+      document.querySelectorAll('button[data-buy]').forEach(b => b.onclick = () => buyItem(b.dataset.buy));
+    }
+
+    // Monta posts
+    function renderPosts(){
+      postsEl.innerHTML = "";
+      POSTS.forEach(p => {
+        const div = document.createElement('div'); div.className="post"; div.style.marginBottom="10px";
+        div.innerHTML = `<h4 style="margin:0 0 8px 0">${p.title}</h4><p style="margin:0;color:var(--muted)">${p.excerpt}</p>`;
+        postsEl.appendChild(div);
+      });
+    }
+
+    renderGrid(DATA);
+    renderPosts();
+
+    // Filtros
+    function applyFilters(){
+      const q = (searchInput.value||"").toLowerCase();
+      const cat = categorySelect.value;
+      const filtered = DATA.filter(i => {
+        const matchQ = i.title.toLowerCase().includes(q) || i.desc.toLowerCase().includes(q) || i.category.toLowerCase().includes(q);
+        const matchCat = cat ? i.category === cat : true;
+        return matchQ && matchCat;
+      });
+      renderGrid(filtered);
+    }
+    searchInput.oninput = applyFilters;
+    categorySelect.onchange = applyFilters;
+    clearBtn.onclick = () => { searchInput.value=""; categorySelect.value=""; applyFilters(); }
+
+    // Modal detalhe
+    function openModal(id){
+      const it = DATA.find(x => x.id==id);
+      if(!it) return;
+      modalThumb.style.backgroundImage = `url('${it.img}')`;
+      modalDesc.innerText = it.desc;
+      modalName.innerText = it.title;
+      modalCategory.innerText = it.category;
+      modalPrice.innerText = it.price;
+      modalBack.style.display = "flex";
+      // botões atualizam mensagens
+      whatsappBuy.onclick = () => sendWhats(`Olá! Tenho interesse no serviço: *${it.title}* — valor ${it.price}. Tem disponibilidade nesta semana?`);
+      openSchedule.onclick = () => openScheduleForm(it);
+    }
+    document.getElementById('closeModal').onclick = () => modalBack.style.display="none";
+    modalBack.onclick = (e) => { if(e.target===modalBack) modalBack.style.display="none"; }
+
+    // Compra via WhatsApp
+    function sendWhats(message){
+      const url = `https://wa.me/${PHONE_WHATS}?text=${encodeURIComponent(message)}`;
+      window.open(url, "_blank");
+    }
+    function buyItem(id){
+      const it = DATA.find(x => x.id==id);
+      if(!it) return;
+      sendWhats(`Olá! Quero reservar: *${it.title}* — ${it.price}. Tem horários disponíveis?`);
+    }
+
+    // Botão superior WhatsApp (contato geral)
+    contactWhatsapp.href = `https://wa.me/${PHONE_WHATS}?text=${encodeURIComponent("Olá! Vi seu catálogo e quero informações.")}`;
+
+    // Agenda rápida (simples modal de formulário)
+    function openScheduleForm(item){
+      const msg = item ? `Quero agendar: ${item.title}` : `Quero agendar um serviço`;
+      const name = prompt("Nome completo:");
+      if(!name) return alert("Nome é necessário.");
+      const date = prompt("Data desejada (ex: 2025-12-15):");
+      if(!date) return alert("Data é necessária.");
+      const hora = prompt("Horário aproximado (ex: 14:30):");
+      // monta mensagem e abre WhatsApp
+      const finalMsg = `${msg}\nNome: ${name}\nData: ${date}\nHora: ${hora}\nContato via site.`;
+      sendWhats(finalMsg);
+    }
+    openAgenda.onclick = () => openScheduleForm(null);
+
+    // Botão agendar (cabecalho)
+    document.getElementById('open-agenda').onclick = () => openScheduleForm(null);
+
+    // Link "Pedir por WhatsApp" no modal
+    whatsappBuy.onclick = () => {
+      // será sobrescrito quando modal abrir; se não, abre contato geral
+      sendWhats(`Olá! Tenho interesse. ${SITE_NAME}`);
+    }
+
+    // Pequeno atalho: tecla / abre busca
+    document.addEventListener('keydown', e => {
+      if(e.key === "/"){
+        e.preventDefault();
+        searchInput.focus();
+      }
+    });
+
+    /* ===========================
+       Observações de implantação:
+       - Substitua PHONE_WHATS pelo seu número (ex: 5511987654321)
+       - Troque as URLs das imagens por suas fotos no Google Drive/Imgur/Cloud
+       - Para agendamento profissional, integre Calendly, TidyCal ou formulários do Google Forms
+       - Para blog completo, conecte a um CMS (Netlify CMS, Wordpress ou Ghost)
+       =========================== */
+  </script>
+</body>
+</html>
